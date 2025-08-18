@@ -4,6 +4,8 @@ import pandas as pd
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
+import json
+import re
 
 # --- Page & AI Configuration ---
 st.set_page_config(layout="wide", page_title="AI Content Strategy Engine", page_icon="🚀")
@@ -16,38 +18,41 @@ except Exception as e:
     st.stop()
 
 # --- AI Agent Function ---
-def generate_strategy(topic, trends_df):
-    """Takes a topic and trending data, and returns an AI-generated content strategy."""
+def generate_strategy(topic, trends_df, audience, goal, tone):
+    """Takes user inputs and trend data, and returns an AI-generated content strategy."""
     
-    st.write("🧠 Contacting AI Agent with trend data...")
+    st.write("🧠 Contacting AI Agent with enriched context...")
     
-    # Convert dataframe to a more readable string for the prompt
     trends_string = trends_df.to_string(index=False)
 
-    # This is a sophisticated prompt that guides the AI through a chain of thought
+    # This is our new, more advanced prompt that takes the user's granular controls as context
     prompt = f"""
     You are a world-class Content Strategist and Prompt Engineer for a digital marketing agency.
-    Your client wants to create engaging content about the topic: "{topic}".
-    You have successfully retrieved real-time, related trending search queries from Google Trends to inform your strategy.
+    Your client has provided specific goals for their content strategy.
 
-    **Analysis Task (Chain of Thought):**
-    1.  **Analyze the Input:** Review the client's topic ('{topic}') and the provided list of trending queries.
-    2.  **Identify Core Themes:** What are the underlying themes or user intents behind these trending searches? (e.g., are people looking for 'how-to guides', 'cost comparisons', 'product reviews', 'beginner tips'?).
-    3.  **Brainstorm Content Angles:** Based on these themes, brainstorm 3 distinct and creative content ideas that would perform well on platforms like YouTube, blogs, and social media.
-    4.  **Structure the Strategy:** Format these ideas into a clear, actionable 3-day content plan.
+    **Client's Strategic Goals:**
+    - Main Topic: "{topic}"
+    - Target Audience: "{audience}"
+    - Primary Content Goal: "{goal}"
+    - Desired Tone of Voice: "{tone}"
 
-    **Here is the real-time trending data from Google Trends:**
+    **Contextual Data (Live from Google Trends):**
+    You have retrieved the following real-time, related trending search queries to inform the strategy.
     ---
     {trends_string}
     ---
 
+    **Your Task (Chain of Thought):**
+    1.  **Analyze Context:** Review all the client's goals and the live trend data.
+    2.  **Identify Themes:** What are the underlying user intents in the trend data that align with the client's goals?
+    3.  **Brainstorm Angles:** Based on the themes, brainstorm 3 distinct content ideas specifically tailored to the target audience, goal, and tone.
+    4.  **Structure the Strategy:** Format these ideas into a clear, actionable 3-day content plan.
+
     **Final Output Requirement:**
     Generate a concise, 3-day content strategy plan. For each day, provide:
-    - A "killer" headline/title that is SEO-friendly and attention-grabbing.
+    - A "killer" headline/title that reflects the requested tone and is SEO-friendly.
     - The best content format (e.g., Blog Post, YouTube Video, Instagram Reel).
-    - A short summary (2-3 sentences) of what the content will cover, including the angle.
-
-    Do not include any extra conversational text or introductions like "Here is the content strategy".
+    - A short summary (2-3 sentences) explaining the content's angle.
     """
     
     try:
@@ -59,37 +64,25 @@ def generate_strategy(topic, trends_df):
 
 # --- UI Layout ---
 st.title("🚀 AI Content Strategy Engine")
-st.markdown("""
-    <style>
-    .main {
-        background-color: #f0f2f5;
-        padding: 20px;
-        border-radius: 10px;
-    }
-    .header {
-        text-align: center;
-        color: #333;
-    }
-    .subheader {
-        color: #007bff;
-    }
-    .input-container {
-        margin: 20px 0;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.markdown("Welcome! This tool uses live Google Trends data and AI to build a content plan tailored to your specific goals. **Start by setting your strategy in the sidebar on the left.**")
+st.markdown("---")
 
-st.markdown("<h2 class='header'>Discover Real-Time Trends and Generate a Complete Content Plan in Seconds</h2>", unsafe_allow_html=True)
+# --- Sidebar Controls ---
+st.sidebar.title("Sentiview AI 🧠")
+st.sidebar.markdown("AI-Powered Marketing Persona Generator.")
+st.sidebar.header("🎯 Strategy Controls")
 
-# --- Input Form ---
-with st.form(key="topic_form"):
-    user_topic = st.text_input("Enter your content topic (e.g., 'electric cars', 'skincare routine')", placeholder="What's your topic?", key="topic_input")
-    submit_button = st.form_submit_button(label="✨ Generate Strategy")
+user_topic = st.sidebar.text_input("1. Enter your content topic", placeholder="e.g., 'Artificial Intelligence'")
+audience = st.sidebar.selectbox("2. Select Target Audience", ["General Audience", "Gen Z (18-24)", "Millennials (25-40)", "Tech Professionals", "Small Business Owners"])
+goal = st.sidebar.selectbox("3. Select Content Goal", ["Drive Engagement & Discussion", "Increase SEO Traffic", "Build Brand Trust & Authority", "Generate Leads"])
+tone = st.sidebar.selectbox("4. Select Tone of Voice", ["Professional & Authoritative", "Witty & Humorous", "Friendly & Casual", "Inspirational & Uplifting"])
 
-# --- Main Logic ---
-if submit_button and user_topic:
-    st.markdown("---")
-    st.subheader(f"Analyzing Trends for: '{user_topic}'", anchor="trends-analysis")
+# Generate Button
+generate_button = st.sidebar.button("✨ Generate Strategy", type="primary", use_container_width=True)
+
+# --- Main Logic & Display ---
+if generate_button and user_topic:
+    st.subheader(f"Analyzing Trends for: '{user_topic}'")
     
     with st.spinner("🔍 Fetching real-time data from Google Trends..."):
         try:
@@ -102,14 +95,18 @@ if submit_button and user_topic:
                 st.dataframe(related_queries)
                 
                 # --- AI GENERATION ---
-                ai_strategy = generate_strategy(user_topic, related_queries)
+                with st.spinner("🤖 AI Agent is building your custom strategy..."):
+                    ai_strategy = generate_strategy(user_topic, related_queries, audience, goal, tone)
                 
                 if ai_strategy:
                     st.markdown("---")
                     st.subheader("🤖 Your AI-Generated Content Strategy")
                     st.markdown(ai_strategy)
             else:
-                st.warning("⚠️ Could not find enough related trend data for this topic. Please try a broader topic.")
+                st.warning("Could not find enough related trend data for this topic. Please try a broader topic.")
 
         except Exception as e:
-            st.error(f"🔥 An error occurred while fetching trends: {e}")
+            st.error(f"An error occurred while fetching trends: {e}")
+
+else:
+    st.info("Set your strategy in the sidebar and click 'Generate Strategy' to begin!")
