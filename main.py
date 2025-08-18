@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 import os
 import json
 import re
-from requests_html import HTMLSession # New, more powerful library
+import requests
+from bs4 import BeautifulSoup
 
 # --- Page & AI Configuration ---
 st.set_page_config(layout="wide", page_title="AI Content Strategy Engine", page_icon="🚀")
@@ -18,9 +19,8 @@ except Exception as e:
     st.error("🚨 Error configuring the AI model. Is your GEMINI_API_KEY set in the .env file?")
     st.stop()
 
-# --- AI Agent Functions (No Change Here) ---
+# --- AI Agent Functions ---
 def generate_strategy(topic, trends_df, audience, goal, tone):
-    # ... (This function remains the same)
     st.sidebar.write("🧠 Contacting AI Agent for Content Strategy...")
     trends_string = trends_df.to_string(index=False)
     prompt = f"""
@@ -59,7 +59,6 @@ def generate_strategy(topic, trends_df, audience, goal, tone):
         return None
 
 def generate_competitor_analysis(competitor_titles):
-    # ... (This function remains the same)
     st.sidebar.write("🕵️‍♂️ Contacting AI Agent for Competitor Analysis...")
     titles_string = "\n".join([f"- {title}" for title in competitor_titles])
     prompt = f"""
@@ -84,26 +83,21 @@ def generate_competitor_analysis(competitor_titles):
         st.error(f"🔥 An error occurred during competitor analysis: {e}")
         return None
 
-# --- NEW AND IMPROVED SCRAPING FUNCTION ---
+# --- Reverted to the reliable, basic scraping function ---
 @st.cache_data
 def scrape_website_titles(url):
-    """Scrapes H1 and H2 tags from a URL, rendering JavaScript first."""
+    """Scrapes the H1 and H2 tags from a given URL using requests and BeautifulSoup."""
     try:
-        session = HTMLSession()
-        response = session.get(url, timeout=20)
-        # This is the magic step: it runs the JavaScript on the page
-        response.html.render(timeout=20) 
-        
-        # Now we find the titles in the fully rendered HTML
-        titles = [tag.text for tag in response.html.find(['h1', 'h2'])]
-        return list(set(titles)) # Return unique titles
-    except Exception as e:
-        return f"Error scraping URL: {e}"
+        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        response.raise_for_status() # Will raise an error for bad status codes
+        soup = BeautifulSoup(response.content, 'html.parser')
+        titles = [tag.get_text(strip=True) for tag in soup.find_all(['h1', 'h2'])]
+        return list(set(titles))
+    except requests.RequestException as e:
+        return f"Error: Could not retrieve content from the URL. The site may be blocking scrapers or requires JavaScript. Error details: {e}"
 
-
-# --- UI Layout (No Change Here) ---
+# --- UI Layout ---
 st.title("🚀 AI Content Strategy Engine")
-# ... (The rest of the UI code remains the same)
 st.markdown("""
     <style>
     .stApp {
@@ -133,7 +127,7 @@ with st.sidebar.expander("📝 CONTENT STRATEGY", expanded=True):
     generate_button = st.button("✨ Generate Content Strategy", type="primary", use_container_width=True)
 
 with st.sidebar.expander("⚔️ COMPETITOR ANALYSIS"):
-    competitor_url = st.text_input("Enter a competitor's blog URL", placeholder="e.g., https://competitor.com/blog")
+    competitor_url = st.text_input("Enter a competitor's blog URL", placeholder="e.g., https://en.wikipedia.org/wiki/Blog")
     analyze_button = st.button("🕵️‍♂️ Analyze Competitor", use_container_width=True)
 
 if generate_button and user_topic:
@@ -164,7 +158,7 @@ elif analyze_button and competitor_url:
             if competitor_analysis:
                 st.markdown(competitor_analysis)
         else:
-            st.error(f"Could not retrieve titles from the URL. It might be protected from scraping. Error: {titles}")
+            st.error(titles)
 
 else:
     st.info("Set your strategy in the sidebar and click a button to begin!")
