@@ -19,11 +19,10 @@ except Exception as e:
 def generate_strategy(topic, trends_df, audience, goal, tone):
     """Takes user inputs and trend data, and returns an AI-generated content strategy."""
     
-    st.write("🧠 Contacting AI Agent with enriched context...")
+    st.sidebar.write("🧠 Contacting AI Agent with enriched context...")
     
     trends_string = trends_df.to_string(index=False)
 
-    # Advanced prompt that uses all the user's granular controls
     prompt = f"""
     You are a world-class Content Strategist and Prompt Engineer for a digital marketing agency.
     Your client has provided specific goals for their content strategy.
@@ -43,7 +42,7 @@ def generate_strategy(topic, trends_df, audience, goal, tone):
     **Your Task (Chain of Thought):**
     1.  **Analyze Context:** Review all the client's goals and the live trend data.
     2.  **Identify Themes:** What are the underlying user intents in the trend data that align with the client's goals?
-    3.  **Brainstorm Angles:** Based on the themes, brainstorm 3 distinct content ideas specifically tailored to the target audience, goal, and tone.
+    3.  **Brainstorm Content Angles:** Based on the themes, brainstorm 3 distinct content ideas specifically tailored to the target audience, goal, and tone.
     4.  **Structure the Strategy:** Format these ideas into a clear, actionable 3-day content plan.
 
     **Final Output Requirement:**
@@ -66,28 +65,18 @@ st.title("🚀 AI Content Strategy Engine")
 # --- Your Custom CSS Styling ---
 st.markdown("""
     <style>
-    .main {
-        background-color: #f0f2f5;
-        padding: 20px;
-        border-radius: 10px;
-    }
     .stApp {
-         background-color: #2e3138; /* A darker background for the whole app */
+         background-color: #2e3138;
     }
     .header {
         text-align: center;
-        color: #FFFFFF; /* White text for header */
-    }
-    .subheader {
-        color: #007bff;
+        color: #FFFFFF;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Your Custom Header ---
 st.markdown("<h2 class='header'>Discover Real-Time Trends and Generate a Complete Content Plan in Seconds</h2>", unsafe_allow_html=True)
 st.markdown("---")
-
 
 # --- Sidebar Controls ---
 st.sidebar.title("Strategy Controls 🎯")
@@ -102,8 +91,6 @@ generate_button = st.sidebar.button("✨ Generate Strategy", type="primary", use
 
 # --- Main Logic & Display ---
 if generate_button and user_topic:
-    st.subheader(f"Analyzing Trends for: '{user_topic}'")
-    
     with st.spinner("🔍 Fetching real-time data from Google Trends..."):
         try:
             pytrends = TrendReq(hl='en-US', tz=330)
@@ -111,22 +98,27 @@ if generate_button and user_topic:
             related_queries = pytrends.related_queries().get(user_topic, {}).get('top')
             
             if related_queries is not None and not related_queries.empty:
-                st.success("✅ Found a list of trending related topics!")
-                st.dataframe(related_queries)
+                # --- Create Tabs for Output ---
+                tab1, tab2 = st.tabs(["📈 Trend Analysis", "🤖 AI-Generated Strategy"])
+                
+                with tab1:
+                    st.subheader(f"Live Google Trends Data for '{user_topic}'")
+                    st.success("✅ Found a list of trending related topics!")
+                    st.dataframe(related_queries)
                 
                 # --- AI GENERATION ---
-                with st.spinner("🤖 AI Agent is building your custom strategy..."):
-                    ai_strategy = generate_strategy(user_topic, related_queries, audience, goal, tone)
+                ai_strategy = generate_strategy(user_topic, related_queries, audience, goal, tone)
                 
-                if ai_strategy:
-                    st.markdown("---")
-                    st.subheader("🤖 Your AI-Generated Content Strategy")
-                    st.markdown(ai_strategy)
+                with tab2:
+                    st.subheader("Your Custom Content Plan")
+                    if ai_strategy:
+                        st.markdown(ai_strategy)
+                    else:
+                        st.error("Could not generate the AI strategy. Please check the error message in the sidebar.")
             else:
                 st.warning(f"⚠️ Could not find enough related trend data for '{user_topic}'. Please try a broader topic.")
 
         except Exception as e:
-            st.error(f"🔥 An error occurred while fetching trends: {e}")
-
+            st.error(f"An error occurred while fetching trends: {e}")
 else:
     st.info("Set your strategy in the sidebar and click 'Generate Strategy' to begin!")
