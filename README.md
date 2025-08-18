@@ -91,4 +91,7 @@ It's a practical demonstration of how a well-engineered AI agent can transform a
     ```
 
 The application will launch in your web browser!
+
+<img width="1438" height="873" alt="image" src="https://github.com/user-attachments/assets/070d4668-ed10-4f3f-a0c8-086d20601f9e" />
+
 <img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/be2cfc4f-50e2-4af4-a27d-2a52a2767678" />
