@@ -3,5 +3,5 @@ pandas
 google-generativeai
 python-dotenv
 pytrends
-requests-html
+requests
 beautifulsoup4
