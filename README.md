@@ -1,9 +1,5 @@
 # 🚀 AI Content Strategy Engine
 
-<div align="center">
-  <img src="<img width="263" height="148" alt="image" src="https://github.com/user-attachments/assets/7223c3dd-ba41-4d4c-b1b9-c6b25815866c" />"width="800"/>
-</div>
-
 <p align="center">
   <em>An interactive AI agent that transforms real-time Google Trends data into a complete, actionable content strategy in seconds.</em>
 </p>
