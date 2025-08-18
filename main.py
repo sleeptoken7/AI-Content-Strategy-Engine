@@ -4,8 +4,6 @@ import pandas as pd
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
-import json
-import re
 
 # --- Page & AI Configuration ---
 st.set_page_config(layout="wide", page_title="AI Content Strategy Engine", page_icon="🚀")
@@ -25,7 +23,7 @@ def generate_strategy(topic, trends_df, audience, goal, tone):
     
     trends_string = trends_df.to_string(index=False)
 
-    # This is our new, more advanced prompt that takes the user's granular controls as context
+    # Advanced prompt that uses all the user's granular controls
     prompt = f"""
     You are a world-class Content Strategist and Prompt Engineer for a digital marketing agency.
     Your client has provided specific goals for their content strategy.
@@ -64,20 +62,42 @@ def generate_strategy(topic, trends_df, audience, goal, tone):
 
 # --- UI Layout ---
 st.title("🚀 AI Content Strategy Engine")
-st.markdown("Welcome! This tool uses live Google Trends data and AI to build a content plan tailored to your specific goals. **Start by setting your strategy in the sidebar on the left.**")
+
+# --- Your Custom CSS Styling ---
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f0f2f5;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .stApp {
+         background-color: #2e3138; /* A darker background for the whole app */
+    }
+    .header {
+        text-align: center;
+        color: #FFFFFF; /* White text for header */
+    }
+    .subheader {
+        color: #007bff;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- Your Custom Header ---
+st.markdown("<h2 class='header'>Discover Real-Time Trends and Generate a Complete Content Plan in Seconds</h2>", unsafe_allow_html=True)
 st.markdown("---")
 
+
 # --- Sidebar Controls ---
-st.sidebar.title("Sentiview AI 🧠")
-st.sidebar.markdown("AI-Powered Marketing Persona Generator.")
-st.sidebar.header("🎯 Strategy Controls")
+st.sidebar.title("Strategy Controls 🎯")
+st.sidebar.markdown("Define your content goals here.")
 
 user_topic = st.sidebar.text_input("1. Enter your content topic", placeholder="e.g., 'Artificial Intelligence'")
 audience = st.sidebar.selectbox("2. Select Target Audience", ["General Audience", "Gen Z (18-24)", "Millennials (25-40)", "Tech Professionals", "Small Business Owners"])
 goal = st.sidebar.selectbox("3. Select Content Goal", ["Drive Engagement & Discussion", "Increase SEO Traffic", "Build Brand Trust & Authority", "Generate Leads"])
 tone = st.sidebar.selectbox("4. Select Tone of Voice", ["Professional & Authoritative", "Witty & Humorous", "Friendly & Casual", "Inspirational & Uplifting"])
 
-# Generate Button
 generate_button = st.sidebar.button("✨ Generate Strategy", type="primary", use_container_width=True)
 
 # --- Main Logic & Display ---
@@ -103,10 +123,10 @@ if generate_button and user_topic:
                     st.subheader("🤖 Your AI-Generated Content Strategy")
                     st.markdown(ai_strategy)
             else:
-                st.warning("Could not find enough related trend data for this topic. Please try a broader topic.")
+                st.warning(f"⚠️ Could not find enough related trend data for '{user_topic}'. Please try a broader topic.")
 
         except Exception as e:
-            st.error(f"An error occurred while fetching trends: {e}")
+            st.error(f"🔥 An error occurred while fetching trends: {e}")
 
 else:
     st.info("Set your strategy in the sidebar and click 'Generate Strategy' to begin!")
