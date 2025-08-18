@@ -4,8 +4,9 @@ import pandas as pd
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
-import requests
-from bs4 import BeautifulSoup
+import json
+import re
+from requests_html import HTMLSession # New, more powerful library
 
 # --- Page & AI Configuration ---
 st.set_page_config(layout="wide", page_title="AI Content Strategy Engine", page_icon="🚀")
@@ -17,12 +18,14 @@ except Exception as e:
     st.error("🚨 Error configuring the AI model. Is your GEMINI_API_KEY set in the .env file?")
     st.stop()
 
-# --- AI Agent Functions ---
+# --- AI Agent Functions (No Change Here) ---
 def generate_strategy(topic, trends_df, audience, goal, tone):
+    # ... (This function remains the same)
     st.sidebar.write("🧠 Contacting AI Agent for Content Strategy...")
     trends_string = trends_df.to_string(index=False)
     prompt = f"""
-    You are a world-class Content Strategist. Your client has provided specific goals and live trend data.
+    You are a world-class Content Strategist and Prompt Engineer for a digital marketing agency.
+    Your client has provided specific goals for their content strategy.
 
     **Client's Strategic Goals:**
     - Main Topic: "{topic}"
@@ -31,17 +34,22 @@ def generate_strategy(topic, trends_df, audience, goal, tone):
     - Desired Tone of Voice: "{tone}"
 
     **Contextual Data (Live from Google Trends):**
+    You have retrieved the following real-time, related trending search queries to inform the strategy.
     ---
     {trends_string}
     ---
 
-    **Your Task:**
-    Analyze the goals and data, then generate a concise 3-day content strategy plan.
+    **Your Task (Chain of Thought):**
+    1.  **Analyze Context:** Review all the client's goals and the live trend data.
+    2.  **Identify Themes:** What are the underlying user intents in the trend data that align with the client's goals?
+    3.  **Brainstorm Content Angles:** Based on the themes, brainstorm 3 distinct content ideas specifically tailored to the target audience, goal, and tone.
+    4.  **Structure the Strategy:** Format these ideas into a clear, actionable 3-day content plan.
 
-    **Output Format Instructions:**
-    - For each day, provide a "killer" headline, the best content format, and a short summary.
-    - Use markdown `####` for numbered subheadings like "#### 1. Analyze Context:".
-    - Use a markdown horizontal rule `---` to separate each day's plan for visual clarity.
+    **Final Output Requirement:**
+    Generate a concise, 3-day content strategy plan. For each day, provide:
+    - A "killer" headline/title that reflects the requested tone and is SEO-friendly.
+    - The best content format (e.g., Blog Post, YouTube Video, Instagram Reel).
+    - A short summary (2-3 sentences) explaining the content's angle.
     """
     try:
         response = model.generate_content(prompt)
@@ -51,6 +59,7 @@ def generate_strategy(topic, trends_df, audience, goal, tone):
         return None
 
 def generate_competitor_analysis(competitor_titles):
+    # ... (This function remains the same)
     st.sidebar.write("🕵️‍♂️ Contacting AI Agent for Competitor Analysis...")
     titles_string = "\n".join([f"- {title}" for title in competitor_titles])
     prompt = f"""
@@ -75,36 +84,35 @@ def generate_competitor_analysis(competitor_titles):
         st.error(f"🔥 An error occurred during competitor analysis: {e}")
         return None
 
-# --- Backend Helper Functions ---
+# --- NEW AND IMPROVED SCRAPING FUNCTION ---
 @st.cache_data
 def scrape_website_titles(url):
-    """Scrapes the H1 and H2 tags from a given URL."""
+    """Scrapes H1 and H2 tags from a URL, rendering JavaScript first."""
     try:
-        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        # Find all h1 and h2 tags, which usually contain main titles
-        titles = [tag.get_text(strip=True) for tag in soup.find_all(['h1', 'h2'])]
+        session = HTMLSession()
+        response = session.get(url, timeout=20)
+        # This is the magic step: it runs the JavaScript on the page
+        response.html.render(timeout=20) 
+        
+        # Now we find the titles in the fully rendered HTML
+        titles = [tag.text for tag in response.html.find(['h1', 'h2'])]
         return list(set(titles)) # Return unique titles
-    except requests.RequestException as e:
+    except Exception as e:
         return f"Error scraping URL: {e}"
 
-# --- UI Layout ---
-st.title("🚀 AI Content Strategy Engine")
 
-# --- Custom CSS Styling ---
+# --- UI Layout (No Change Here) ---
+st.title("🚀 AI Content Strategy Engine")
+# ... (The rest of the UI code remains the same)
 st.markdown("""
     <style>
-    /* Main app background */
     .stApp {
          background-color: #2e3138;
     }
-    /* Header text */
     .header {
         text-align: center;
         color: #FFFFFF;
     }
-    /* Increase font size for Streamlit's native tab labels */
     .stTabs [data-baseweb="tab"] {
         font-size: 18px;
         font-weight: bold;
@@ -115,10 +123,8 @@ st.markdown("""
 st.markdown("<h2 class='header'>Discover Real-Time Trends and Generate a Complete Content Plan in Seconds</h2>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- Sidebar Controls ---
 st.sidebar.title("Strategy Controls 🎯")
 
-# Main Strategy Generator
 with st.sidebar.expander("📝 CONTENT STRATEGY", expanded=True):
     user_topic = st.text_input("1. Enter your content topic", placeholder="e.g., 'Artificial Intelligence'")
     audience = st.selectbox("2. Select Target Audience", ["General Audience", "Gen Z (18-24)", "Millennials (25-40)", "Tech Professionals", "Small Business Owners"])
@@ -126,15 +132,11 @@ with st.sidebar.expander("📝 CONTENT STRATEGY", expanded=True):
     tone = st.selectbox("4. Select Tone of Voice", ["Professional & Authoritative", "Witty & Humorous", "Friendly & Casual", "Inspirational & Uplifting"])
     generate_button = st.button("✨ Generate Content Strategy", type="primary", use_container_width=True)
 
-# Competitor Analysis Section
 with st.sidebar.expander("⚔️ COMPETITOR ANALYSIS"):
     competitor_url = st.text_input("Enter a competitor's blog URL", placeholder="e.g., https://competitor.com/blog")
     analyze_button = st.button("🕵️‍♂️ Analyze Competitor", use_container_width=True)
 
-
-# --- Main Logic & Display Area ---
 if generate_button and user_topic:
-    # Logic for Content Strategy
     pytrends = TrendReq(hl='en-US', tz=330)
     pytrends.build_payload([user_topic], cat=0, timeframe='today 1-m', geo='IN', gprop='')
     related_queries = pytrends.related_queries().get(user_topic, {}).get('top')
@@ -153,7 +155,6 @@ if generate_button and user_topic:
         st.warning(f"⚠️ Could not find enough related trend data for '{user_topic}'. Please try a broader topic.")
 
 elif analyze_button and competitor_url:
-    # Logic for Competitor Analysis
     st.subheader(f"Analyzing Competitor: {competitor_url}")
     with st.spinner("🕵️‍♂️ Scraping competitor titles and analyzing..."):
         titles = scrape_website_titles(competitor_url)
