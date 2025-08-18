@@ -59,17 +59,37 @@ def generate_strategy(topic, trends_df):
 
 # --- UI Layout ---
 st.title("🚀 AI Content Strategy Engine")
-st.markdown("Enter a topic to discover real-time trends and generate a complete content plan in seconds.")
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f0f2f5;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .header {
+        text-align: center;
+        color: #333;
+    }
+    .subheader {
+        color: #007bff;
+    }
+    .input-container {
+        margin: 20px 0;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h2 class='header'>Discover Real-Time Trends and Generate a Complete Content Plan in Seconds</h2>", unsafe_allow_html=True)
 
 # --- Input Form ---
 with st.form(key="topic_form"):
-    user_topic = st.text_input("Enter your content topic (e.g., 'electric cars', 'skincare routine')", placeholder="What's your topic?")
+    user_topic = st.text_input("Enter your content topic (e.g., 'electric cars', 'skincare routine')", placeholder="What's your topic?", key="topic_input")
     submit_button = st.form_submit_button(label="✨ Generate Strategy")
 
 # --- Main Logic ---
 if submit_button and user_topic:
     st.markdown("---")
-    st.subheader(f"Analyzing Trends for: '{user_topic}'")
+    st.subheader(f"Analyzing Trends for: '{user_topic}'", anchor="trends-analysis")
     
     with st.spinner("🔍 Fetching real-time data from Google Trends..."):
         try:
@@ -89,7 +109,7 @@ if submit_button and user_topic:
                     st.subheader("🤖 Your AI-Generated Content Strategy")
                     st.markdown(ai_strategy)
             else:
-                st.warning("Could not find enough related trend data for this topic. Please try a broader topic.")
+                st.warning("⚠️ Could not find enough related trend data for this topic. Please try a broader topic.")
 
         except Exception as e:
-            st.error(f"An error occurred while fetching trends: {e}")
+            st.error(f"🔥 An error occurred while fetching trends: {e}")
