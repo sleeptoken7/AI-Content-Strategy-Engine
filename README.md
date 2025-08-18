@@ -1,7 +1,7 @@
 # 🚀 AI Content Strategy Engine
 
 <div align="center">
-  <img src="https://i.imgur.com/your-welcome-image-url.png" alt="Welcome Banner" width="800"/>
+  <img src="https://www.canva.com/photos/s/welcome/" alt="Welcome Banner" width="800"/>
 </div>
 
 <p align="center">
@@ -15,14 +15,6 @@
 </p>
 
 ---
-
-## ✨ Live Demo & Sneak Peek
-
-*(This is the most important part of your README. After you record your video, convert a short, 10-15 second clip of the app working into a GIF and upload it here. It's a game-changer!)*
-
-<div align="center">
-    <img src="https://i.imgur.com/your-app-demo-gif.gif" alt="App Demo GIF" width="800"/>
-</div>
 
 ---
 
