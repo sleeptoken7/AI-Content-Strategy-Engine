@@ -24,29 +24,30 @@ def generate_strategy(topic, trends_df):
     # Convert dataframe to a more readable string for the prompt
     trends_string = trends_df.to_string(index=False)
 
+    # This is a sophisticated prompt that guides the AI through a chain of thought
     prompt = f"""
     You are a world-class Content Strategist and Prompt Engineer for a digital marketing agency.
-    Your client wants to create content about the topic: "{topic}".
+    Your client wants to create engaging content about the topic: "{topic}".
     You have successfully retrieved real-time, related trending search queries from Google Trends to inform your strategy.
 
     **Analysis Task (Chain of Thought):**
-    1.  **Analyze the Input:** Review the provided topic and the list of trending queries.
-    2.  **Identify Core Themes:** What are the underlying themes or user intents behind these trending searches? (e.g., 'cost comparison', 'how-to guides', 'product reviews').
+    1.  **Analyze the Input:** Review the client's topic ('{topic}') and the provided list of trending queries.
+    2.  **Identify Core Themes:** What are the underlying themes or user intents behind these trending searches? (e.g., are people looking for 'how-to guides', 'cost comparisons', 'product reviews', 'beginner tips'?).
     3.  **Brainstorm Content Angles:** Based on these themes, brainstorm 3 distinct and creative content ideas that would perform well on platforms like YouTube, blogs, and social media.
     4.  **Structure the Strategy:** Format these ideas into a clear, actionable 3-day content plan.
 
-    **Here is the trending data:**
+    **Here is the real-time trending data from Google Trends:**
     ---
     {trends_string}
     ---
 
     **Final Output Requirement:**
     Generate a concise, 3-day content strategy plan. For each day, provide:
-    - **A "killer" headline/title.**
-    - **The best content format** (e.g., Blog Post, YouTube Video, Instagram Reel).
-    - **A short summary** (2-3 sentences) of what the content will cover.
+    - A "killer" headline/title that is SEO-friendly and attention-grabbing.
+    - The best content format (e.g., Blog Post, YouTube Video, Instagram Reel).
+    - A short summary (2-3 sentences) of what the content will cover, including the angle.
 
-    Do not include any extra conversational text or introductions in your final output.
+    Do not include any extra conversational text or introductions like "Here is the content strategy".
     """
     
     try:
