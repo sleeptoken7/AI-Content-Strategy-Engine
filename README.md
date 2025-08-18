@@ -1,8 +1,7 @@
 # 🚀 AI Content Strategy Engine
 
 <div align="center">
-  <img src="<img width="263" height="148" alt="image" src="https://github.com/user-attachments/assets/7223c3dd-ba41-4d4c-b1b9-c6b25815866c" />
- " alt="Welcome Banner" width="800"/>
+  <img src="<img width="263" height="148" alt="image" src="https://github.com/user-attachments/assets/7223c3dd-ba41-4d4c-b1b9-c6b25815866c" />"width="800"/>
 </div>
 
 <p align="center">
